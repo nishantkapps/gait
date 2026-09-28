@@ -1,0 +1,11 @@
+# Map source marker names → OpenSim / Rajagopal MarkerSet names.
+# Unmapped source names are kept as-is.
+markers:
+  LASI: L.ASIS
+  RASI: R.ASIS
+  LPSI: L.PSIS
+  RPSI: R.PSIS
+  LTOE: L.Toe
+  RTOE: R.Toe
+  LHEE: L.Heel
+  RHEE: R.Heel

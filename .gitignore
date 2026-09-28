@@ -1,0 +1,31 @@
+# Data (large / private)
+data/raw/
+data/processed/
+models/*.osim
+models/**/*.osim
+!models/.gitkeep
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.egg-info/
+dist/
+build/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Local secrets
+gittoken
+*.pem
+
+# Legacy / non-pipeline
+*.odt
+*.ods
