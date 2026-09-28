@@ -1,0 +1,39 @@
+adapter:
+  type: __ADAPTER_TYPE__
+paths:
+  processed_dir: data/processed
+  marker_map: config/marker_maps/example.yaml
+subject:
+  subject_id: __SUBJECT_ID__
+  mass_kg: __MASS_KG__
+  height_m: __HEIGHT_M__
+  hemiplegic_side: null
+  trial_id: __TRIAL_ID__
+units:
+  marker_input: mm
+  trc_output: m
+lab_axes:
+  from_lab_to_opensim:
+    - [1.0, 0.0, 0.0]
+    - [0.0, 1.0, 0.0]
+    - [0.0, 0.0, 1.0]
+force_plates: []
+csv:
+  delimiter: ","
+  time_column: time
+  sample_rate_hz: 100
+  axis_suffixes: ["_X", "_Y", "_Z"]
+opensim:
+  enabled: false
+  ground_body: ground
+  generic_model: models/Rajagopal2016.osim
+  scale_setup: config/opensim/scale_setup.xml
+  ik_setup: config/opensim/ik_setup.xml
+  id_setup: config/opensim/id_setup.xml
+  outputs:
+    trc: markers.trc
+    grf_mot: grf.mot
+    external_loads: external_loads.xml
+    scaled_model: scaled.osim
+    ik_mot: ik.mot
+    id_sto: id.sto

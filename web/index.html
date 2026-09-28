@@ -18,14 +18,14 @@
   <main class="stage">
     <h1 class="headline">Turn a capture file into OpenSim outputs</h1>
     <p class="lede">
-      Drop a C3D trial, set subject details, and run Workstream A on GitHub Actions.
-      Download markers, GRF, and ExternalLoads when the job finishes.
+      Drop a trial file (CSV, C3D, or other), set subject details, and run Workstream A
+      on GitHub Actions. Download OpenSim-ready outputs when the job finishes.
     </p>
 
     <form id="job-form" class="panel">
       <label class="drop" id="drop-zone">
-        <input type="file" id="c3d-file" accept=".c3d,.C3D" required />
-        <span id="drop-label">Drop C3D here or click to choose</span>
+        <input type="file" id="source-file" required />
+        <span id="drop-label">Drop a file here or click to choose</span>
       </label>
 
       <div class="grid">

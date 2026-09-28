@@ -1,11 +1,11 @@
-"""Process one inbox job: C3D + YAML → TRC/GRF (OpenSim optional)."""
+"""Process one inbox job: source + YAML → TRC/GRF (OpenSim optional)."""
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
 
-from gait.adapters.c3d_adapter import C3dAdapter
+from gait.adapters.factory import get_adapter
 from gait.config import load_yaml
 from gait.mapping import apply_marker_map
 from gait.opensim_scale_ik_id import run_id, run_ik, run_scale
@@ -19,7 +19,7 @@ def main() -> None:
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
     names = cfg["opensim"]["outputs"]
-    trial = C3dAdapter().load(args.source, cfg)
+    trial = get_adapter(cfg["adapter"]["type"]).load(args.source, cfg)
     trial = apply_marker_map(trial, load_yaml(cfg["paths"]["marker_map"])["markers"])
     write_trc(trial, out / names["trc"], cfg["units"]["trc_output"])
     if trial.forces:

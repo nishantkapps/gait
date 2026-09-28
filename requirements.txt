@@ -1,4 +1,5 @@
 ezc3d
 numpy
 PyYAML
+pandas
 # OpenSim Python bindings: install via conda-forge (`conda install -c opensim-org opensim`)

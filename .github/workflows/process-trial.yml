@@ -23,7 +23,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install deps
-        run: pip install ezc3d numpy PyYAML
+        run: pip install ezc3d numpy PyYAML pandas
 
       - name: Run Workstream A writers
         env:
@@ -32,12 +32,13 @@ jobs:
           set -euo pipefail
           IN="inbox/${JOB_ID}"
           OUT="data/processed/${JOB_ID}"
-          test -f "${IN}/trial.c3d"
           test -f "${IN}/trial.yaml"
+          SOURCE="$(find "${IN}" -maxdepth 1 -type f ! -name 'trial.yaml' | head -n 1)"
+          test -n "${SOURCE}"
           export PYTHONPATH=src
           python scripts/process_job.py \
             --config "${IN}/trial.yaml" \
-            --source "${IN}/trial.c3d" \
+            --source "${SOURCE}" \
             --out-dir "${OUT}"
 
       - name: Upload outputs

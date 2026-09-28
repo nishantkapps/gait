@@ -5,45 +5,25 @@ async function loadAppConfig() {
   return res.json();
 }
 
-function buildYaml(form) {
-  const id = form.subject_id.value.trim();
-  return [
-    "adapter:",
-    "  type: c3d",
-    "paths:",
-    "  processed_dir: data/processed",
-    "  marker_map: config/marker_maps/example.yaml",
-    "subject:",
-    `  subject_id: ${id}`,
-    `  mass_kg: ${Number(form.mass_kg.value)}`,
-    `  height_m: ${Number(form.height_m.value) || null}`,
-    "  hemiplegic_side: null",
-    `  trial_id: ${form.trial_id.value.trim() || "walk01"}`,
-    "units:",
-    "  marker_input: mm",
-    "  trc_output: m",
-    "lab_axes:",
-    "  from_lab_to_opensim:",
-    "    - [1.0, 0.0, 0.0]",
-    "    - [0.0, 1.0, 0.0]",
-    "    - [0.0, 0.0, 1.0]",
-    "force_plates: []",
-    "opensim:",
-    "  enabled: false",
-    "  ground_body: ground",
-    "  generic_model: models/Rajagopal2016.osim",
-    "  scale_setup: config/opensim/scale_setup.xml",
-    "  ik_setup: config/opensim/ik_setup.xml",
-    "  id_setup: config/opensim/id_setup.xml",
-    "  outputs:",
-    "    trc: markers.trc",
-    "    grf_mot: grf.mot",
-    "    external_loads: external_loads.xml",
-    "    scaled_model: scaled.osim",
-    "    ik_mot: ik.mot",
-    "    id_sto: id.sto",
-    "",
-  ].join("\n");
+async function loadTrialTemplate() {
+  const res = await fetch("trial.template.yaml");
+  return res.text();
+}
+
+function adapterType(fileName) {
+  const ext = fileName.split(".").pop().toLowerCase();
+  if (ext === "c3d") return "c3d";
+  return "csv";
+}
+
+function buildYaml(template, form, fileName) {
+  const height = Number(form.height_m.value);
+  return template
+    .replaceAll("__ADAPTER_TYPE__", adapterType(fileName))
+    .replaceAll("__SUBJECT_ID__", form.subject_id.value.trim())
+    .replaceAll("__MASS_KG__", String(Number(form.mass_kg.value)))
+    .replaceAll("__HEIGHT_M__", Number.isFinite(height) ? String(height) : "null")
+    .replaceAll("__TRIAL_ID__", form.trial_id.value.trim() || "walk01");
 }
 
 function toBase64(buffer) {
@@ -123,7 +103,7 @@ async function listArtifacts(owner, repo, token, runId) {
 
 function wireDrop() {
   const zone = $("drop-zone");
-  const input = $("c3d-file");
+  const input = $("source-file");
   const label = $("drop-label");
   zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("drag"); });
   zone.addEventListener("dragleave", () => zone.classList.remove("drag"));
@@ -140,12 +120,13 @@ function wireDrop() {
   });
 }
 
-async function uploadJob(owner, repo, token, prefix, jobId, file, form) {
-  $("status").textContent = "Uploading C3D…";
-  const c3dBuf = await file.arrayBuffer();
-  await putFile(owner, repo, token, `${prefix}/trial.c3d`, toBase64(c3dBuf), `inbox ${jobId} c3d`);
+async function uploadJob(owner, repo, token, prefix, jobId, file, form, template) {
+  const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
+  $("status").textContent = "Uploading source file…";
+  const buf = await file.arrayBuffer();
+  await putFile(owner, repo, token, `${prefix}/trial.${ext}`, toBase64(buf), `inbox ${jobId} source`);
   $("status").textContent = "Uploading config…";
-  const yaml = buildYaml(form);
+  const yaml = buildYaml(template, form, file.name);
   const yamlB64 = btoa(unescape(encodeURIComponent(yaml)));
   await putFile(owner, repo, token, `${prefix}/trial.yaml`, yamlB64, `inbox ${jobId} yaml`);
 }
@@ -167,7 +148,7 @@ async function startAndWait(owner, repo, token, appCfg, jobId) {
 async function onSubmit(e, appCfg) {
   e.preventDefault();
   const btn = $("run-btn");
-  const file = $("c3d-file").files[0];
+  const file = $("source-file").files[0];
   if (!file) return;
   btn.disabled = true;
   $("download").hidden = true;
@@ -177,7 +158,7 @@ async function onSubmit(e, appCfg) {
     const token = $("gh_token").value.trim();
     const jobId = `job-${Date.now()}`;
     const prefix = `${appCfg.inbox_prefix}/${jobId}`;
-    await uploadJob(owner, repo, token, prefix, jobId, file, e.target);
+    await uploadJob(owner, repo, token, prefix, jobId, file, e.target, appCfg.trialTemplate);
     const { run, art } = await startAndWait(owner, repo, token, appCfg, jobId);
     $("status").textContent = "Done.";
     $("download").hidden = false;
@@ -191,6 +172,7 @@ async function onSubmit(e, appCfg) {
 
 wireDrop();
 const appCfg = await loadAppConfig();
+appCfg.trialTemplate = await loadTrialTemplate();
 if (appCfg.default_owner) $("gh_owner").value = appCfg.default_owner;
 if (appCfg.default_repo) $("gh_repo").value = appCfg.default_repo;
 $("job-form").addEventListener("submit", (e) => onSubmit(e, appCfg));

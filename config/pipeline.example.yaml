@@ -4,6 +4,13 @@
 adapter:
   type: c3d
 
+# For CSV sources, set adapter.type: csv and fill:
+# csv:
+#   delimiter: ","
+#   time_column: time          # or omit and set sample_rate_hz
+#   sample_rate_hz: 100
+#   axis_suffixes: ["_X", "_Y", "_Z"]
+
 paths:
   processed_dir: data/processed
   marker_map: config/marker_maps/example.yaml
