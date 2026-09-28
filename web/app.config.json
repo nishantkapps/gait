@@ -1,0 +1,9 @@
+# Web app defaults (no secrets). Override in the UI if needed.
+{
+  "default_owner": "nishantkapps",
+  "default_repo": "gait",
+  "inbox_prefix": "inbox",
+  "workflow_file": "process-trial.yml",
+  "poll_ms": 5000,
+  "max_polls": 120
+}

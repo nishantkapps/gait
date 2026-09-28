@@ -29,3 +29,7 @@ gittoken
 # Legacy / non-pipeline
 *.odt
 *.ods
+
+# Web job uploads
+inbox/**
+!inbox/.gitkeep

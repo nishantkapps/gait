@@ -1,0 +1,47 @@
+name: Process trial
+
+run-name: process ${{ inputs.job_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: Inbox job folder name (inbox/<job_id>/)
+        required: true
+        type: string
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install ezc3d numpy PyYAML
+
+      - name: Run Workstream A writers
+        env:
+          JOB_ID: ${{ inputs.job_id }}
+        run: |
+          set -euo pipefail
+          IN="inbox/${JOB_ID}"
+          OUT="data/processed/${JOB_ID}"
+          test -f "${IN}/trial.c3d"
+          test -f "${IN}/trial.yaml"
+          export PYTHONPATH=src
+          python scripts/process_job.py \
+            --config "${IN}/trial.yaml" \
+            --source "${IN}/trial.c3d" \
+            --out-dir "${OUT}"
+
+      - name: Upload outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: gait-outputs-${{ inputs.job_id }}
+          path: data/processed/${{ inputs.job_id }}/

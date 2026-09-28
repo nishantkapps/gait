@@ -28,7 +28,21 @@ python scripts/run_trial.py --config config/pipeline.example.yaml --source data/
 
 Outputs land in `data/processed/<subject_id>/` (`.trc`, GRF `.mot`, ExternalLoads `.xml`, scaled `.osim`, IK `.mot`, ID `.sto`). Load them in OpenSim or OpenSim Creator.
 
-## Piece-wise tests (dataset)
+## Web app (GitHub Pages)
+
+Static UI in `web/`. Pages cannot run OpenSim; the UI uploads to `inbox/` and runs `.github/workflows/process-trial.yml`, then you download Action artifacts (`.trc` / GRF when configured).
+
+1. Repo **Settings → Pages → Source: GitHub Actions**
+2. Push `main` (deploys `web/` via `deploy-pages.yml`)
+3. Open `https://<user>.github.io/gait/`
+4. Use a fine-grained PAT with **Contents** + **Actions** read/write on this repo
+5. Set `default_owner` in `web/app.config.json` if you want it prefilled
+
+Local preview:
+
+```bash
+cd web && python -m http.server 8080
+```
 
 Put a `.c3d` under `data/raw/`, copy `config/pipeline.example.yaml` → `config/my_trial.yaml`, set `subject.mass_kg`, then:
 
