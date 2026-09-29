@@ -16,10 +16,11 @@ units:
   marker_input: mm
   trc_output: m
 lab_axes:
+  # Vicon Z-up → OpenSim Y-up (right-handed)
   from_lab_to_opensim:
     - [1.0, 0.0, 0.0]
-    - [0.0, 1.0, 0.0]
     - [0.0, 0.0, 1.0]
+    - [0.0, -1.0, 0.0]
 force_plates: []
 force_threshold_n: 20
 force_platform_bodies:
