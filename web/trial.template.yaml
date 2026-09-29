@@ -23,8 +23,16 @@ csv:
   time_column: time
   sample_rate_hz: 100
   axis_suffixes: ["_X", "_Y", "_Z"]
+  # Optional GRF columns in the CSV (needed for grf.mot, external_loads.xml, id.sto):
+  # force_plates:
+  #   - name: FP1
+  #     applied_to_body: calcn_r
+  #     force_columns: [Fx, Fy, Fz]
+  #     cop_columns: [COPx, COPy, COPz]
+  #     moment_columns: [Mx, My, Mz]
+  force_plates: []
 opensim:
-  enabled: false
+  enabled: true
   ground_body: ground
   generic_model: models/Rajagopal2016.osim
   scale_setup: config/opensim/scale_setup.xml
