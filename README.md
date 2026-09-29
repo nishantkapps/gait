@@ -26,6 +26,10 @@ Open **http://127.0.0.1:8000/** — drop a file, click **Run pipeline**, downloa
 - Server: `config/server.yaml`
 - UI API base: `web/app.config.json` (`api_base`)
 
+Pushing to `main` runs CI tests, then deploys `web/` to GitHub Pages
+(`.github/workflows/deploy-pages.yml` → `https://nishantkapps.github.io/gait/`).
+Processing still needs the local server.
+
 ## CLI
 
 ```bash
