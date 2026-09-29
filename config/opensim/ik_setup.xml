@@ -17,9 +17,9 @@
 			<objects>
 				<!-- Torso / head (constrain lumbar; avoids hip-hunch from missing upper-body tasks). -->
 				<IKMarkerTask name="Head">
-					<apply>true</apply> <weight>20</weight> </IKMarkerTask>
+					<apply>true</apply> <weight>40</weight> </IKMarkerTask>
 				<IKMarkerTask name="MidClavicle">
-					<apply>true</apply> <weight>15</weight> </IKMarkerTask>
+					<apply>true</apply> <weight>25</weight> </IKMarkerTask>
 				<IKMarkerTask name="R.Shoulder">
 					<apply>true</apply> <weight>10</weight> </IKMarkerTask>
 				<IKMarkerTask name="L.Shoulder">
