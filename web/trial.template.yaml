@@ -37,24 +37,18 @@ opensim:
   scale_setup: config/opensim/scale_setup.xml
   ik_setup: config/opensim/ik_setup.xml
   id_setup: config/opensim/id_setup.xml
-  # Anatomical pairs. Pelvis width-only (XZ) so a wide pelvis does not lengthen the legs.
+  # Whole-leg ASIS→Heel so feet stay on the floor (separate thigh/shank left legs long).
   scale_measurements:
     - name: pelvis
       markers: [L.ASIS, R.ASIS]
       bodies: [pelvis]
       axes: [X, Z]
-    - name: thigh_r
-      markers: [R.ASIS, R.Knee]
-      bodies: [femur_r, patella_r]
-    - name: thigh_l
-      markers: [L.ASIS, L.Knee]
-      bodies: [femur_l, patella_l]
-    - name: shank_r
-      markers: [R.Knee, R.Ankle]
-      bodies: [tibia_r, talus_r]
-    - name: shank_l
-      markers: [L.Knee, L.Ankle]
-      bodies: [tibia_l, talus_l]
+    - name: leg_r
+      markers: [R.ASIS, R.Heel]
+      bodies: [femur_r, patella_r, tibia_r, talus_r]
+    - name: leg_l
+      markers: [L.ASIS, L.Heel]
+      bodies: [femur_l, patella_l, tibia_l, talus_l]
     - name: foot_r
       markers: [R.Heel, R.Toe]
       bodies: [calcn_r, toes_r]
