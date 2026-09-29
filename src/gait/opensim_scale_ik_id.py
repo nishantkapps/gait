@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
+
+
+def _rel_to_setup(setup_xml: str, path: str) -> str:
+    """OpenSim joins file names onto the setup XML directory — never pass abs paths."""
+    setup_dir = Path(setup_xml).resolve().parent
+    return os.path.relpath(Path(path).resolve(), setup_dir)
 
 
 def run_scale(
@@ -15,16 +22,16 @@ def run_scale(
 ) -> None:
     import opensim as osim
 
-    model = str(Path(model_path).resolve())
-    trc = str(Path(marker_trc).resolve())
-    out = str(Path(output_model).resolve())
-    Path(out).parent.mkdir(parents=True, exist_ok=True)
-    tool = osim.ScaleTool(setup_xml)
+    setup = str(Path(setup_xml).resolve())
+    Path(output_model).parent.mkdir(parents=True, exist_ok=True)
+    tool = osim.ScaleTool(setup)
     tool.setSubjectMass(float(mass_kg))
     gmm = tool.getGenericModelMaker()
-    gmm.setModelFileName(model)
+    gmm.setModelFileName(_rel_to_setup(setup, model_path))
     if marker_set:
-        gmm.setMarkerSetFileName(str(Path(marker_set).resolve()))
+        gmm.setMarkerSetFileName(_rel_to_setup(setup, marker_set))
+    trc = _rel_to_setup(setup, marker_trc)
+    out = _rel_to_setup(setup, output_model)
     tool.getModelScaler().setMarkerFileName(trc)
     tool.getModelScaler().setOutputModelFileName(out)
     tool.getMarkerPlacer().setMarkerFileName(trc)
@@ -41,12 +48,13 @@ def run_ik(
 ) -> None:
     import opensim as osim
 
+    setup = str(Path(setup_xml).resolve())
     Path(output_mot).parent.mkdir(parents=True, exist_ok=True)
     model = osim.Model(str(Path(scaled_model).resolve()))
-    tool = osim.InverseKinematicsTool(setup_xml)
+    tool = osim.InverseKinematicsTool(setup)
     tool.setModel(model)
-    tool.setMarkerDataFileName(str(Path(marker_trc).resolve()))
-    tool.setOutputMotionFileName(str(Path(output_mot).resolve()))
+    tool.setMarkerDataFileName(_rel_to_setup(setup, marker_trc))
+    tool.setOutputMotionFileName(_rel_to_setup(setup, output_mot))
     if not tool.run():
         raise RuntimeError(f"IK failed: {setup_xml}")
 
@@ -60,13 +68,14 @@ def run_id(
 ) -> None:
     import opensim as osim
 
+    setup = str(Path(setup_xml).resolve())
     Path(output_sto).parent.mkdir(parents=True, exist_ok=True)
     model = osim.Model(str(Path(scaled_model).resolve()))
     model.initSystem()
-    tool = osim.InverseDynamicsTool(setup_xml)
+    tool = osim.InverseDynamicsTool(setup)
     tool.setModel(model)
-    tool.setCoordinatesFileName(str(Path(coordinates_file).resolve()))
-    tool.setExternalLoadsFileName(str(Path(external_loads_file).resolve()))
-    tool.setOutputGenForceFileName(str(Path(output_sto).resolve()))
+    tool.setCoordinatesFileName(_rel_to_setup(setup, coordinates_file))
+    tool.setExternalLoadsFileName(_rel_to_setup(setup, external_loads_file))
+    tool.setOutputGenForceFileName(_rel_to_setup(setup, output_sto))
     if not tool.run():
         raise RuntimeError(f"ID failed: {setup_xml}")
