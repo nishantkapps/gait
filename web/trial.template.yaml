@@ -16,10 +16,10 @@ units:
   marker_input: mm
   trc_output: m
 lab_axes:
-  # Vicon Z-up (X forward, Y left) → OpenSim Y-up (X forward, Z right)
-  # Check: after transform, R.ASIS.z > L.ASIS.z and Head.y > Heel.y
+  # Vicon Z-up (X forward, Y left) → OpenSim Y-up (−X forward so gait faces +X, Z right)
+  # Check: R.ASIS.z > L.ASIS.z, Head.y > Heel.y, walk progresses +X
   from_lab_to_opensim:
-    - [1.0, 0.0, 0.0]
+    - [-1.0, 0.0, 0.0]
     - [0.0, 0.0, 1.0]
     - [0.0, 1.0, 0.0]
 force_plates: []

@@ -4,6 +4,15 @@ models/*.osim
 models/**/*.osim
 !models/.gitkeep
 
+# OpenSim runtime outputs (must not land under config/)
+config/opensim/**/*.mot
+config/opensim/**/*.sto
+config/opensim/**/*.trc
+config/opensim/**/*.osim
+config/opensim/results_walk/
+config/opensim/subject_scaled_walk_markerset.xml
+config/opensim/scale_output_walk.mot
+
 # Python
 __pycache__/
 *.py[cod]

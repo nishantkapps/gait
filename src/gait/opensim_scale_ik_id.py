@@ -1,13 +1,21 @@
-"""OpenSim Scale, IK, and ID using setup paths from config."""
+"""OpenSim Scale, IK, and ID — setups stay in config; all outputs go to out_dir."""
 
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path
 
 
+def _copy_setup(setup_xml: str, out_dir: Path) -> str:
+    """Run tools from a setup copy inside out_dir so relative writes never hit config/."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    dest = out_dir / Path(setup_xml).name
+    shutil.copy2(setup_xml, dest)
+    return str(dest.resolve())
+
+
 def _rel_to_setup(setup_xml: str, path: str) -> str:
-    """OpenSim joins file names onto the setup XML directory — never pass abs paths."""
     setup_dir = Path(setup_xml).resolve().parent
     return os.path.relpath(Path(path).resolve(), setup_dir)
 
@@ -22,8 +30,9 @@ def run_scale(
 ) -> None:
     import opensim as osim
 
-    setup = str(Path(setup_xml).resolve())
-    Path(output_model).parent.mkdir(parents=True, exist_ok=True)
+    out_model = Path(output_model).resolve()
+    out_dir = out_model.parent
+    setup = _copy_setup(setup_xml, out_dir)
     tool = osim.ScaleTool(setup)
     tool.setSubjectMass(float(mass_kg))
     gmm = tool.getGenericModelMaker()
@@ -31,11 +40,16 @@ def run_scale(
     if marker_set:
         gmm.setMarkerSetFileName(_rel_to_setup(setup, marker_set))
     trc = _rel_to_setup(setup, marker_trc)
-    out = _rel_to_setup(setup, output_model)
+    out = _rel_to_setup(setup, str(out_model))
     tool.getModelScaler().setMarkerFileName(trc)
     tool.getModelScaler().setOutputModelFileName(out)
-    tool.getMarkerPlacer().setMarkerFileName(trc)
-    tool.getMarkerPlacer().setOutputModelFileName(out)
+    placer = tool.getMarkerPlacer()
+    placer.setMarkerFileName(trc)
+    placer.setOutputModelFileName(out)
+    placer.setOutputMotionFileName(_rel_to_setup(setup, str(out_dir / "scale_output.mot")))
+    placer.setOutputMarkerFileName(
+        _rel_to_setup(setup, str(out_dir / "scaled_markerset.xml"))
+    )
     if not tool.run():
         raise RuntimeError(f"Scale failed: {setup_xml}")
 
@@ -48,13 +62,15 @@ def run_ik(
 ) -> None:
     import opensim as osim
 
-    setup = str(Path(setup_xml).resolve())
-    Path(output_mot).parent.mkdir(parents=True, exist_ok=True)
+    out_mot = Path(output_mot).resolve()
+    out_dir = out_mot.parent
+    setup = _copy_setup(setup_xml, out_dir)
     model = osim.Model(str(Path(scaled_model).resolve()))
     tool = osim.InverseKinematicsTool(setup)
     tool.setModel(model)
+    tool.setResultsDirectory(".")
     tool.setMarkerDataFileName(_rel_to_setup(setup, marker_trc))
-    tool.setOutputMotionFileName(_rel_to_setup(setup, output_mot))
+    tool.setOutputMotionFileName(_rel_to_setup(setup, str(out_mot)))
     if not tool.run():
         raise RuntimeError(f"IK failed: {setup_xml}")
 
@@ -68,14 +84,16 @@ def run_id(
 ) -> None:
     import opensim as osim
 
-    setup = str(Path(setup_xml).resolve())
-    Path(output_sto).parent.mkdir(parents=True, exist_ok=True)
+    out_sto = Path(output_sto).resolve()
+    out_dir = out_sto.parent
+    setup = _copy_setup(setup_xml, out_dir)
     model = osim.Model(str(Path(scaled_model).resolve()))
     model.initSystem()
     tool = osim.InverseDynamicsTool(setup)
     tool.setModel(model)
+    tool.setResultsDirectory(".")
     tool.setCoordinatesFileName(_rel_to_setup(setup, coordinates_file))
     tool.setExternalLoadsFileName(_rel_to_setup(setup, external_loads_file))
-    tool.setOutputGenForceFileName(_rel_to_setup(setup, output_sto))
+    tool.setOutputGenForceFileName(_rel_to_setup(setup, str(out_sto)))
     if not tool.run():
         raise RuntimeError(f"ID failed: {setup_xml}")
