@@ -46,6 +46,7 @@ def _opensim(cfg: dict, out: Path, names: dict, trc: Path) -> None:
         float(cfg["subject"]["mass_kg"]),
         o.get("marker_set"),
         o.get("scale_measurements"),
+        cfg["subject"].get("height_m"),
     )
     ik = out / names["ik_mot"]
     run_ik(str(scaled), o["ik_setup"], str(ik), str(trc))

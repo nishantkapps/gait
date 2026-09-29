@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from gait.adapters.factory import get_adapter
+from gait.anthro import anthro_from_subject_dir
 from gait.config import load_yaml
 from gait.discover import discover_c3ds
 from gait.mapping import apply_marker_map_file
@@ -18,10 +19,16 @@ def run_subject_dir(config_path: str, input_dir: str, out_dir: str) -> Path:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     static_c3d, dynamic_c3ds = discover_c3ds(input_dir, cfg)
+    _apply_file_anthro(cfg, [static_c3d, *dynamic_c3ds])
     marker_cfg = load_yaml(cfg["paths"]["marker_map"])
     names = cfg["opensim"]["outputs"]
     scaled = _scale_static(cfg, static_c3d, marker_cfg, out, names)
-    lines = [f"static: {static_c3d.name}", f"scaled: {scaled}"]
+    lines = [
+        f"static: {static_c3d.name}",
+        f"mass_kg: {cfg['subject']['mass_kg']}",
+        f"height_m: {cfg['subject'].get('height_m')}",
+        f"scaled: {scaled}",
+    ]
     for c3d_path in dynamic_c3ds:
         trial_out = out / c3d_path.stem
         status = _process_dynamic(cfg, c3d_path, marker_cfg, scaled, trial_out, names)
@@ -29,6 +36,14 @@ def run_subject_dir(config_path: str, input_dir: str, out_dir: str) -> Path:
         lines.extend(f"  {k}: {v}" for k, v in status.items())
     (out / "subject_manifest.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return out
+
+
+def _apply_file_anthro(cfg: dict, c3d_paths: list[Path]) -> None:
+    info = anthro_from_subject_dir(c3d_paths)
+    if "mass_kg" in info:
+        cfg["subject"]["mass_kg"] = info["mass_kg"]
+    if "height_m" in info:
+        cfg["subject"]["height_m"] = info["height_m"]
 
 
 def _load_trial(cfg: dict, source: Path, marker_cfg: dict, trial_id: str):
@@ -53,6 +68,7 @@ def _scale_static(cfg, static_c3d: Path, marker_cfg, out: Path, names: dict) -> 
         float(cfg["subject"]["mass_kg"]),
         o.get("marker_set"),
         o.get("scale_measurements"),
+        cfg["subject"].get("height_m"),
     )
     return scaled
 

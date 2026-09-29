@@ -64,13 +64,13 @@
 					</IKMarkerTask>
 					<IKMarkerTask name="L.Clavicle">
 						<!--Whether or not this task will be used during inverse kinematics solve.-->
-						<apply>true</apply>
+						<apply>false</apply>
 						<!--Weight given to a marker or coordinate for solving inverse kinematics problems.-->
 						<weight>3</weight>
 					</IKMarkerTask>
 					<IKMarkerTask name="R.Clavicle">
 						<!--Whether or not this task will be used during inverse kinematics solve.-->
-						<apply>true</apply>
+						<apply>false</apply>
 						<!--Weight given to a marker or coordinate for solving inverse kinematics problems.-->
 						<weight>3</weight>
 					</IKMarkerTask>
@@ -322,13 +322,13 @@
 					</IKMarkerTask>
 					<IKMarkerTask name="L.TH1">
 						<!--Whether or not this task will be used during inverse kinematics solve.-->
-						<apply>false</apply>
+						<apply>true</apply>
 						<!--Weight given to a marker or coordinate for solving inverse kinematics problems.-->
 						<weight>0</weight>
 					</IKMarkerTask>
 					<IKMarkerTask name="R.TH1">
 						<!--Whether or not this task will be used during inverse kinematics solve.-->
-						<apply>false</apply>
+						<apply>true</apply>
 						<!--Weight given to a marker or coordinate for solving inverse kinematics problems.-->
 						<weight>0</weight>
 					</IKMarkerTask>
@@ -358,13 +358,13 @@
 					</IKMarkerTask>
 					<IKMarkerTask name="L.SH1">
 						<!--Whether or not this task will be used during inverse kinematics solve.-->
-						<apply>false</apply>
+						<apply>true</apply>
 						<!--Weight given to a marker or coordinate for solving inverse kinematics problems.-->
 						<weight>0</weight>
 					</IKMarkerTask>
 					<IKMarkerTask name="R.SH1">
 						<!--Whether or not this task will be used during inverse kinematics solve.-->
-						<apply>false</apply>
+						<apply>true</apply>
 						<!--Weight given to a marker or coordinate for solving inverse kinematics problems.-->
 						<weight>0</weight>
 					</IKMarkerTask>
@@ -430,13 +430,13 @@
 					</IKMarkerTask>
 					<IKMarkerTask name="MidClavicle">
 						<!--Whether or not this task will be used during inverse kinematics solve.-->
-						<apply>false</apply>
+						<apply>true</apply>
 						<!--Weight given to a marker or coordinate for solving inverse kinematics problems.-->
 						<weight>0</weight>
 					</IKMarkerTask>
 					<IKMarkerTask name="Head">
 						<!--Whether or not this task will be used during inverse kinematics solve.-->
-						<apply>false</apply>
+						<apply>true</apply>
 						<!--Weight given to a marker or coordinate for solving inverse kinematics problems.-->
 						<weight>0</weight>
 					</IKMarkerTask>

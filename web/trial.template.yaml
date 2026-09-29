@@ -37,11 +37,12 @@ opensim:
   scale_setup: config/opensim/scale_setup.xml
   ik_setup: config/opensim/ik_setup.xml
   id_setup: config/opensim/id_setup.xml
-  # Marker-pair lengths used to scale segments (fixes foot/leg height vs ground).
+  # Anatomical pairs. Pelvis width-only (XZ) so a wide pelvis does not lengthen the legs.
   scale_measurements:
     - name: pelvis
       markers: [L.ASIS, R.ASIS]
       bodies: [pelvis]
+      axes: [X, Z]
     - name: thigh_r
       markers: [R.ASIS, R.Knee]
       bodies: [femur_r, patella_r]
@@ -60,6 +61,9 @@ opensim:
     - name: foot_l
       markers: [L.Heel, L.Toe]
       bodies: [calcn_l, toes_l]
+    - name: torso
+      markers: [MidClavicle, Head]
+      bodies: [torso]
   outputs:
     trc: markers.trc
     grf_mot: grf.mot

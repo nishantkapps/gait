@@ -35,13 +35,13 @@ def _add_scale_measurements(scaler, measurements: list) -> None:
         meas.setApply(True)
         m1, m2 = item["markers"]
         meas.getMarkerPairSet().adoptAndAppend(osim.MarkerPair(str(m1), str(m2)))
+        axes_names = list(item.get("axes") or ["X", "Y", "Z"])
         for body in item["bodies"]:
             bs = osim.BodyScale()
             bs.setName(str(body))
             axes = osim.ArrayStr()
-            axes.append("X")
-            axes.append("Y")
-            axes.append("Z")
+            for axis in axes_names:
+                axes.append(str(axis))
             bs.setAxisNames(axes)
             meas.getBodyScaleSet().adoptAndAppend(bs)
         scaler.addMeasurement(meas)
@@ -58,6 +58,7 @@ def run_scale(
     mass_kg: float,
     marker_set: str | None = None,
     measurements: list | None = None,
+    height_m: float | None = None,
 ) -> None:
     import opensim as osim
 
@@ -66,6 +67,8 @@ def run_scale(
     setup = _copy_setup(setup_xml, out_dir)
     tool = osim.ScaleTool(setup)
     tool.setSubjectMass(float(mass_kg))
+    if height_m is not None:
+        tool.setSubjectHeight(float(height_m))
     gmm = tool.getGenericModelMaker()
     gmm.setModelFileName(_rel_to_setup(setup, model_path))
     if marker_set:

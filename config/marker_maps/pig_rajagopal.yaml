@@ -10,22 +10,20 @@ markers:
   RASI: R.ASIS
   LPSI: L.PSIS
   RPSI: R.PSIS
-  SACR: S2
+  # SACR often absent in modern PiG; S2 is synthesized below from mid-PSIS.
 
   # Thorax / shoulders
+  # CLAV → MidClavicle. Do NOT map LCLA/RCLA → L/R.Clavicle: PiG clavicle
+  # markers sit near the acromial end (~25–30 cm from CLAV), while Rajagopal's
+  # Clavicle markers are only ~2.5 cm off the jugular notch — that mismatch
+  # produced ~27 cm IK errors and pulled the torso into hip flexion.
   LSHO: L.Shoulder
   RSHO: R.Shoulder
   CLAV: MidClavicle
-  LCLA: L.Clavicle
-  RCLA: R.Clavicle
 
-  # Arms
+  # Arms (wrists averaged below from WRA+WRB)
   LELB: L.Elbow
   RELB: R.Elbow
-  LWRA: L.Wrist
-  RWRA: R.Wrist
-  LWRB: L.Wrist
-  RWRB: R.Wrist
 
   # Thigh / knee
   LTHI: L.TH1
@@ -45,8 +43,14 @@ markers:
   LTOE: L.Toe
   RTOE: R.Toe
 
-  # Head (single OpenSim Head marker; prefer front)
-  LFHD: Head
-  RFHD: Head
-  LBHD: Head
-  RBHD: Head
+# Multi-source experimental markers → one OpenSim marker (nanmean over frames).
+average_markers:
+  Head:
+    sources: [LFHD, RFHD]
+  L.Wrist:
+    sources: [LWRA, LWRB]
+  R.Wrist:
+    sources: [RWRA, RWRB]
+  # Sacral marker surrogate when SACR is missing from the C3D.
+  S2:
+    sources: [LPSI, RPSI]
