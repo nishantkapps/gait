@@ -50,6 +50,28 @@ opensim:
   scale_setup: config/opensim/scale_setup.xml
   ik_setup: config/opensim/ik_setup.xml
   id_setup: config/opensim/id_setup.xml
+  scale_measurements:
+    - name: pelvis
+      markers: [L.ASIS, R.ASIS]
+      bodies: [pelvis]
+    - name: thigh_r
+      markers: [R.ASIS, R.Knee]
+      bodies: [femur_r, patella_r]
+    - name: thigh_l
+      markers: [L.ASIS, L.Knee]
+      bodies: [femur_l, patella_l]
+    - name: shank_r
+      markers: [R.Knee, R.Ankle]
+      bodies: [tibia_r, talus_r]
+    - name: shank_l
+      markers: [L.Knee, L.Ankle]
+      bodies: [tibia_l, talus_l]
+    - name: foot_r
+      markers: [R.Heel, R.Toe]
+      bodies: [calcn_r, toes_r]
+    - name: foot_l
+      markers: [L.Heel, L.Toe]
+      bodies: [calcn_l, toes_l]
   outputs:
     trc: markers.trc
     grf_mot: grf.mot

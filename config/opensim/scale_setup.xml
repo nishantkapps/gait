@@ -240,25 +240,25 @@
 						<!--Whether or not this task will be used during inverse kinematics solve.-->
 						<apply>true</apply>
 						<!--Weight given to a marker or coordinate for solving inverse kinematics problems.-->
-						<weight>5</weight>
+						<weight>20</weight>
 					</IKMarkerTask>
 					<IKMarkerTask name="R.Toe">
 						<!--Whether or not this task will be used during inverse kinematics solve.-->
 						<apply>true</apply>
 						<!--Weight given to a marker or coordinate for solving inverse kinematics problems.-->
-						<weight>5</weight>
+						<weight>20</weight>
 					</IKMarkerTask>
 					<IKMarkerTask name="L.MT5">
 						<!--Whether or not this task will be used during inverse kinematics solve.-->
-						<apply>true</apply>
+						<apply>false</apply>
 						<!--Weight given to a marker or coordinate for solving inverse kinematics problems.-->
-						<weight>100</weight>
+						<weight>1</weight>
 					</IKMarkerTask>
 					<IKMarkerTask name="R.MT5">
 						<!--Whether or not this task will be used during inverse kinematics solve.-->
-						<apply>true</apply>
+						<apply>false</apply>
 						<!--Weight given to a marker or coordinate for solving inverse kinematics problems.-->
-						<weight>100</weight>
+						<weight>1</weight>
 					</IKMarkerTask>
 					<IKMarkerTask name="L.Heel">
 						<!--Whether or not this task will be used during inverse kinematics solve.-->

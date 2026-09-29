@@ -268,9 +268,9 @@
 			</Marker>
 			<Marker name="R.Toe">
 				<!--Body segment in the model on which the marker resides.-->
-				<body>calcn_r</body>
+				<body>toes_r</body>
 				<!--Location of a marker on the body segment.-->
-				<location> 0.23 0.037 -0.016</location>
+				<location> 0.04 0.01 0.0</location>
 				<!--Flag (true or false) specifying whether or not a marker should be kept fixed in the marker placement step.  i.e. If false, the marker is allowed to move.-->
 				<fixed>false</fixed>
 			</Marker>
@@ -380,9 +380,9 @@
 			</Marker>
 			<Marker name="L.Toe">
 				<!--Body segment in the model on which the marker resides.-->
-				<body>calcn_l</body>
+				<body>toes_l</body>
 				<!--Location of a marker on the body segment.-->
-				<location> 0.23 0.037 0.016</location>
+				<location> 0.04 0.01 0.0</location>
 				<!--Flag (true or false) specifying whether or not a marker should be kept fixed in the marker placement step.  i.e. If false, the marker is allowed to move.-->
 				<fixed>false</fixed>
 			</Marker>

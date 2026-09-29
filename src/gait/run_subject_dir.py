@@ -52,6 +52,7 @@ def _scale_static(cfg, static_c3d: Path, marker_cfg, out: Path, names: dict) -> 
         str(trc),
         float(cfg["subject"]["mass_kg"]),
         o.get("marker_set"),
+        o.get("scale_measurements"),
     )
     return scaled
 
