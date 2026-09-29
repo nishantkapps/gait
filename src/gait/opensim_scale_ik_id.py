@@ -68,7 +68,7 @@ def run_ik(
     model = osim.Model(str(Path(scaled_model).resolve()))
     tool = osim.InverseKinematicsTool(setup)
     tool.setModel(model)
-    tool.setResultsDirectory(".")
+    tool.setResultsDir(".")
     tool.setMarkerDataFileName(_rel_to_setup(setup, marker_trc))
     tool.setOutputMotionFileName(_rel_to_setup(setup, str(out_mot)))
     if not tool.run():
@@ -91,7 +91,7 @@ def run_id(
     model.initSystem()
     tool = osim.InverseDynamicsTool(setup)
     tool.setModel(model)
-    tool.setResultsDirectory(".")
+    tool.setResultsDir(".")
     tool.setCoordinatesFileName(_rel_to_setup(setup, coordinates_file))
     tool.setExternalLoadsFileName(_rel_to_setup(setup, external_loads_file))
     tool.setOutputGenForceFileName(_rel_to_setup(setup, str(out_sto)))
