@@ -59,25 +59,46 @@ def _run_opensim_or_skip(cfg, out: Path, names: dict, status: dict) -> None:
             status[names[key]] = "missing: opensim.enabled is false"
         return
     o = cfg["opensim"]
-    model = Path(o["generic_model"])
-    if not model.exists():
-        raise FileNotFoundError(f"OpenSim model not found: {model}")
+    missing = [
+        p
+        for p in (o["generic_model"], o["scale_setup"], o["ik_setup"], o["id_setup"])
+        if not Path(p).exists()
+    ]
+    if missing:
+        msg = "missing assets: " + ", ".join(missing)
+        for key in ("scaled_model", "ik_mot", "id_sto"):
+            status[names[key]] = msg
+        return
     _opensim(cfg, out, names, status)
 
 
 def _opensim(cfg: dict, out: Path, names: dict, status: dict) -> None:
     o = cfg["opensim"]
     scaled = out / names["scaled_model"]
-    run_scale(o["generic_model"], o["scale_setup"], str(scaled))
-    status[names["scaled_model"]] = "ok"
-    run_ik(str(scaled), o["ik_setup"], str(out / names["ik_mot"]))
-    status[names["ik_mot"]] = "ok"
+    try:
+        run_scale(o["generic_model"], o["scale_setup"], str(scaled))
+        status[names["scaled_model"]] = "ok"
+    except Exception as exc:
+        status[names["scaled_model"]] = f"failed: {exc}"
+        status[names["ik_mot"]] = "skipped: scale failed"
+        status[names["id_sto"]] = "skipped: scale failed"
+        return
+    try:
+        run_ik(str(scaled), o["ik_setup"], str(out / names["ik_mot"]))
+        status[names["ik_mot"]] = "ok"
+    except Exception as exc:
+        status[names["ik_mot"]] = f"failed: {exc}"
+        status[names["id_sto"]] = "skipped: ik failed"
+        return
     ext = out / names["external_loads"]
     if not ext.exists():
         status[names["id_sto"]] = "missing: need GRF/ExternalLoads for ID"
         return
-    run_id(str(scaled), o["id_setup"], str(out / names["id_sto"]))
-    status[names["id_sto"]] = "ok"
+    try:
+        run_id(str(scaled), o["id_setup"], str(out / names["id_sto"]))
+        status[names["id_sto"]] = "ok"
+    except Exception as exc:
+        status[names["id_sto"]] = f"failed: {exc}"
 
 
 def _write_manifest(out: Path, status: dict) -> None:

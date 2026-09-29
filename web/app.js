@@ -53,7 +53,12 @@ async function runLocal(appCfg, file, form) {
   const res = await fetch(`${appCfg.api_base}/api/process`, { method: "POST", body });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || `Server error ${res.status}`);
+    let msg = text || `Server error ${res.status}`;
+    try {
+      const j = JSON.parse(text);
+      if (j.error) msg = j.error;
+    } catch (_) { /* keep text */ }
+    throw new Error(msg);
   }
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);

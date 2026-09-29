@@ -57,7 +57,10 @@ def _handle_process(req, jobs: Path):
     cfg_path = job_dir / "trial.yaml"
     cfg_path.write_text(req.form["config_yaml"], encoding="utf-8")
     out = job_dir / "out"
-    run_job(str(cfg_path), str(src), str(out))
+    try:
+        run_job(str(cfg_path), str(src), str(out))
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 400
     return send_file(_zip_dir(out), as_attachment=True, download_name="gait-outputs.zip")
 
 
