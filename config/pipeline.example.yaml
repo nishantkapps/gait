@@ -24,11 +24,12 @@ units:
   trc_output: m
 
 lab_axes:
-  # Vicon Z-up → OpenSim Y-up (right-handed)
+  # Vicon Z-up (X forward, Y left) → OpenSim Y-up (X forward, Z right)
+  # Check: after transform, R.ASIS.z > L.ASIS.z and Head.y > Heel.y
   from_lab_to_opensim:
     - [1.0, 0.0, 0.0]
     - [0.0, 0.0, 1.0]
-    - [0.0, -1.0, 0.0]
+    - [0.0, 1.0, 0.0]
 
 # Empty = read FORCE_PLATFORM + Force.Fx1… channels from the C3D.
 force_plates: []
