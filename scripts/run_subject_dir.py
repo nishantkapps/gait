@@ -3,9 +3,15 @@
 from __future__ import annotations
 
 import argparse
+import traceback
 from pathlib import Path
 
+from gait.config import load_yaml
+from gait.run_layout import allocate_run
+from gait.run_log import capture_run_log
 from gait.run_subject_dir import run_subject_dir
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> None:
@@ -21,19 +27,24 @@ def main() -> None:
     p.add_argument(
         "--out-dir",
         default=None,
-        help="Output directory (default: data/processed/<subject_id>)",
+        help="Override results dir (default: data/outputs/run_XXX/results)",
     )
     args = p.parse_args()
-    out = args.out_dir
-    if out is None:
-        from gait.config import load_yaml
-
-        cfg = load_yaml(args.config)
-        out = str(
-            Path(cfg["paths"]["processed_dir"]) / cfg["subject"]["subject_id"]
-        )
-    path = run_subject_dir(args.config, args.input_dir, out)
-    print("wrote", path)
+    server = load_yaml(ROOT / "config" / "server.yaml")
+    outputs_root = ROOT / server["outputs_dir"]
+    logs_root = ROOT / server["logs_dir"]
+    run_n, out_dir, log_dir = allocate_run(outputs_root, logs_root)
+    results = Path(args.out_dir) if args.out_dir else out_dir / "results"
+    log_path = log_dir / "pipeline.log"
+    try:
+        with capture_run_log(log_path):
+            print(f"run_{run_n:03d} output={out_dir} log={log_path}")
+            path = run_subject_dir(args.config, args.input_dir, str(results))
+            print("wrote", path)
+    except Exception:
+        with log_path.open("a", encoding="utf-8") as log_f:
+            log_f.write("\n" + traceback.format_exc())
+        raise
 
 
 if __name__ == "__main__":

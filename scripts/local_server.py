@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import io
-import time
+import traceback
 import zipfile
 from pathlib import Path
 
@@ -11,6 +11,8 @@ from flask import Flask, jsonify, request, send_file, send_from_directory
 from flask_cors import CORS
 
 from gait.config import load_yaml
+from gait.run_layout import allocate_run
+from gait.run_log import capture_run_log
 from gait.run_subject_dir import run_subject_dir
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,13 +22,15 @@ def create_app(cfg: dict) -> Flask:
     app = Flask(__name__, static_folder=None)
     CORS(app, origins=cfg["cors_origins"])
     web = ROOT / cfg["web_dir"]
-    jobs = ROOT / cfg["jobs_dir"]
-    jobs.mkdir(parents=True, exist_ok=True)
-    _routes(app, web, jobs)
+    outputs_root = ROOT / cfg["outputs_dir"]
+    logs_root = ROOT / cfg["logs_dir"]
+    outputs_root.mkdir(parents=True, exist_ok=True)
+    logs_root.mkdir(parents=True, exist_ok=True)
+    _routes(app, web, outputs_root, logs_root)
     return app
 
 
-def _routes(app: Flask, web: Path, jobs: Path) -> None:
+def _routes(app: Flask, web: Path, outputs_root: Path, logs_root: Path) -> None:
     @app.get("/")
     def index():
         return send_from_directory(web, "index.html")
@@ -41,30 +45,41 @@ def _routes(app: Flask, web: Path, jobs: Path) -> None:
 
     @app.post("/api/process")
     def process():
-        return _handle_process(request, jobs)
+        return _handle_process(request, outputs_root, logs_root)
 
 
-def _handle_process(req, jobs: Path):
+def _handle_process(req, outputs_root: Path, logs_root: Path):
     uploads = req.files.getlist("files")
     if not uploads:
         return jsonify({"error": "missing folder upload (files)"}), 400
     if "config_yaml" not in req.form:
         return jsonify({"error": "missing config_yaml"}), 400
-    job_dir = jobs / f"job-{int(time.time() * 1000)}"
-    src = job_dir / "input"
+    run_n, out_dir, log_dir = allocate_run(outputs_root, logs_root)
+    src = out_dir / "input"
     src.mkdir(parents=True, exist_ok=True)
+    log_path = log_dir / "pipeline.log"
     try:
         _save_folder_upload(uploads, src)
     except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    cfg_path = job_dir / "trial.yaml"
+        return jsonify({"error": str(exc), "run": run_n}), 400
+    cfg_path = out_dir / "trial.yaml"
     cfg_path.write_text(req.form["config_yaml"], encoding="utf-8")
-    out = job_dir / "out"
+    results = out_dir / "results"
     try:
-        run_subject_dir(str(cfg_path), str(src), str(out))
+        with capture_run_log(log_path):
+            print(f"run_{run_n:03d} output={out_dir} log={log_path}")
+            run_subject_dir(str(cfg_path), str(src), str(results))
     except Exception as exc:
-        return jsonify({"error": str(exc)}), 400
-    return send_file(_zip_dir(out), as_attachment=True, download_name="gait-outputs.zip")
+        with log_path.open("a", encoding="utf-8") as log_f:
+            log_f.write("\n" + traceback.format_exc())
+        return jsonify({"error": str(exc), "run": run_n, "log": str(log_path)}), 400
+    resp = send_file(
+        _zip_dir(results),
+        as_attachment=True,
+        download_name=f"gait-run_{run_n:03d}.zip",
+    )
+    resp.headers["X-Gait-Run"] = f"run_{run_n:03d}"
+    return resp
 
 
 def _save_folder_upload(uploads, dest: Path) -> None:
@@ -73,7 +88,6 @@ def _save_folder_upload(uploads, dest: Path) -> None:
         if not upload.filename:
             continue
         rel = Path(upload.filename)
-        # Browser sends "FolderName/file.c3d" — strip the top folder name.
         parts = rel.parts
         if len(parts) > 1:
             rel = Path(*parts[1:])

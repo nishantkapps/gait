@@ -61,9 +61,10 @@ async function runLocal(appCfg, form) {
   }
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
+  const run = res.headers.get("X-Gait-Run") || "run";
   $("download").hidden = false;
-  $("download").innerHTML = `<a href="${url}" download="gait-outputs.zip">Download gait-outputs.zip</a>`;
-  $("status").textContent = "Done.";
+  $("download").innerHTML = `<a href="${url}" download="${run}.zip">Download ${run}.zip</a>`;
+  $("status").textContent = `Done (${run}). outputs/${run} · logs/${run}`;
 }
 
 async function onSubmit(e, appCfg) {
