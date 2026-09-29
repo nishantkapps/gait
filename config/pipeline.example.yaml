@@ -10,7 +10,7 @@ subject_dir:
 
 paths:
   processed_dir: data/processed
-  marker_map: config/marker_maps/example.yaml
+  marker_map: config/marker_maps/pig_rajagopal.yaml
 
 subject:
   subject_id: TVC-4

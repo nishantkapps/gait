@@ -5,7 +5,7 @@ subject_dir:
   dynamic_glob: "BWA_*.c3d"
 paths:
   processed_dir: data/processed
-  marker_map: config/marker_maps/example.yaml
+  marker_map: config/marker_maps/pig_rajagopal.yaml
 subject:
   subject_id: __SUBJECT_ID__
   mass_kg: __MASS_KG__

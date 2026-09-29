@@ -6,7 +6,7 @@ from pathlib import Path
 
 from gait.adapters.factory import get_adapter
 from gait.config import load_yaml
-from gait.mapping import apply_marker_map
+from gait.mapping import apply_marker_map_file
 from gait.opensim_scale_ik_id import run_id, run_ik, run_scale
 from gait.writers.grf import write_external_loads_xml, write_grf_mot
 from gait.writers.trc import write_trc
@@ -18,7 +18,7 @@ def run_job(config_path: str, source_path: str, out_dir: str) -> Path:
     out.mkdir(parents=True, exist_ok=True)
     names = cfg["opensim"]["outputs"]
     trial = get_adapter(cfg["adapter"]["type"]).load(source_path, cfg)
-    trial = apply_marker_map(trial, load_yaml(cfg["paths"]["marker_map"])["markers"])
+    trial = apply_marker_map_file(trial, load_yaml(cfg["paths"]["marker_map"]))
     trc = out / names["trc"]
     write_trc(trial, trc, cfg["units"]["trc_output"])
     if trial.forces:

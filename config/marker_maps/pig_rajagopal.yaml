@@ -1,0 +1,52 @@
+# Plug-in Gait (Vicon) → Rajagopal walk MarkerSet
+# Source labels may be "Subject:LASI" or "LASI"; the mapper strips the prefix.
+# Set drop_unmapped: true so PiG virtual/angle points are not written to TRC.
+
+drop_unmapped: true
+
+markers:
+  # Pelvis
+  LASI: L.ASIS
+  RASI: R.ASIS
+  LPSI: L.PSIS
+  RPSI: R.PSIS
+  SACR: S2
+
+  # Thorax / shoulders
+  LSHO: L.Shoulder
+  RSHO: R.Shoulder
+  CLAV: MidClavicle
+  LCLA: L.Clavicle
+  RCLA: R.Clavicle
+
+  # Arms
+  LELB: L.Elbow
+  RELB: R.Elbow
+  LWRA: L.Wrist
+  RWRA: R.Wrist
+  LWRB: L.Wrist
+  RWRB: R.Wrist
+
+  # Thigh / knee
+  LTHI: L.TH1
+  RTHI: R.TH1
+  LKNE: L.Knee
+  RKNE: R.Knee
+
+  # Shank / ankle
+  LTIB: L.SH1
+  RTIB: R.SH1
+  LANK: L.Ankle
+  RANK: R.Ankle
+
+  # Foot
+  LHEE: L.Heel
+  RHEE: R.Heel
+  LTOE: L.Toe
+  RTOE: R.Toe
+
+  # Head (single OpenSim Head marker; prefer front)
+  LFHD: Head
+  RFHD: Head
+  LBHD: Head
+  RBHD: Head

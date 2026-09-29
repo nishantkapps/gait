@@ -7,7 +7,7 @@ from pathlib import Path
 from gait.adapters.factory import get_adapter
 from gait.config import load_yaml
 from gait.discover import discover_c3ds
-from gait.mapping import apply_marker_map
+from gait.mapping import apply_marker_map_file
 from gait.opensim_scale_ik_id import run_id, run_ik, run_scale
 from gait.writers.grf import write_external_loads_xml, write_grf_mot
 from gait.writers.trc import write_trc
@@ -18,29 +18,29 @@ def run_subject_dir(config_path: str, input_dir: str, out_dir: str) -> Path:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     static_c3d, dynamic_c3ds = discover_c3ds(input_dir, cfg)
-    marker_map = load_yaml(cfg["paths"]["marker_map"])["markers"]
+    marker_cfg = load_yaml(cfg["paths"]["marker_map"])
     names = cfg["opensim"]["outputs"]
-    scaled = _scale_static(cfg, static_c3d, marker_map, out, names)
+    scaled = _scale_static(cfg, static_c3d, marker_cfg, out, names)
     lines = [f"static: {static_c3d.name}", f"scaled: {scaled}"]
     for c3d_path in dynamic_c3ds:
         trial_out = out / c3d_path.stem
-        status = _process_dynamic(cfg, c3d_path, marker_map, scaled, trial_out, names)
+        status = _process_dynamic(cfg, c3d_path, marker_cfg, scaled, trial_out, names)
         lines.append(f"{c3d_path.name}:")
         lines.extend(f"  {k}: {v}" for k, v in status.items())
     (out / "subject_manifest.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return out
 
 
-def _load_trial(cfg: dict, source: Path, marker_map: dict, trial_id: str):
+def _load_trial(cfg: dict, source: Path, marker_cfg: dict, trial_id: str):
     cfg = {**cfg, "subject": {**cfg["subject"], "trial_id": trial_id}}
     trial = get_adapter(cfg["adapter"]["type"]).load(str(source), cfg)
-    return apply_marker_map(trial, marker_map)
+    return apply_marker_map_file(trial, marker_cfg)
 
 
-def _scale_static(cfg, static_c3d: Path, marker_map, out: Path, names: dict) -> Path:
+def _scale_static(cfg, static_c3d: Path, marker_cfg, out: Path, names: dict) -> Path:
     scale_dir = out / "scale"
     scale_dir.mkdir(parents=True, exist_ok=True)
-    trial = _load_trial(cfg, static_c3d, marker_map, "static")
+    trial = _load_trial(cfg, static_c3d, marker_cfg, "static")
     trc = scale_dir / "static.trc"
     write_trc(trial, trc, cfg["units"]["trc_output"])
     o = cfg["opensim"]
@@ -56,10 +56,10 @@ def _scale_static(cfg, static_c3d: Path, marker_map, out: Path, names: dict) -> 
     return scaled
 
 
-def _process_dynamic(cfg, c3d_path: Path, marker_map, scaled: Path, trial_out: Path, names):
+def _process_dynamic(cfg, c3d_path: Path, marker_cfg, scaled: Path, trial_out: Path, names):
     trial_out.mkdir(parents=True, exist_ok=True)
     status = {k: "pending" for k in names.values()}
-    trial = _load_trial(cfg, c3d_path, marker_map, c3d_path.stem)
+    trial = _load_trial(cfg, c3d_path, marker_cfg, c3d_path.stem)
     trc = trial_out / names["trc"]
     write_trc(trial, trc, cfg["units"]["trc_output"])
     status[names["trc"]] = "ok"
