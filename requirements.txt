@@ -2,4 +2,6 @@ ezc3d
 numpy
 PyYAML
 pandas
+flask
+flask-cors
 # OpenSim Python bindings: install via conda-forge (`conda install -c opensim-org opensim`)

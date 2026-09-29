@@ -19,7 +19,7 @@
     <h1 class="headline">Turn a capture file into OpenSim outputs</h1>
     <p class="lede">
       Drop a trial file (CSV, C3D, or other), set subject details, and run Workstream A
-      on GitHub Actions. Download OpenSim-ready outputs when the job finishes.
+      on your local server. Download a zip of OpenSim-ready outputs when it finishes.
     </p>
 
     <form id="job-form" class="panel">
@@ -43,26 +43,6 @@
         </label>
       </div>
 
-      <details class="advanced">
-        <summary>GitHub connection</summary>
-        <p class="hint">
-          Pages cannot run OpenSim itself. The app uploads to this repo’s
-          <code>inbox/</code> folder and starts Actions. Use a fine-grained PAT
-          with Contents + Actions read/write. Stored only in this browser session.
-        </p>
-        <div class="grid">
-          <label>Owner
-            <input id="gh_owner" autocomplete="username" required />
-          </label>
-          <label>Repo
-            <input id="gh_repo" value="gait" required />
-          </label>
-          <label class="wide">Personal access token
-            <input id="gh_token" type="password" autocomplete="off" required />
-          </label>
-        </div>
-      </details>
-
       <button type="submit" id="run-btn">Run pipeline</button>
       <p id="status" class="status" role="status"></p>
       <p id="download" class="download" hidden></p>
@@ -70,7 +50,7 @@
   </main>
 
   <footer class="foot">
-    <span>Workstream A · config-driven · Actions compute</span>
+    <span>Workstream A · local server · config-driven</span>
   </footer>
   <script src="app.js" type="module"></script>
 </body>

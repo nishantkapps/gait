@@ -1,0 +1,8 @@
+# Local API that runs Workstream A for the web UI.
+host: "127.0.0.1"
+port: 8000
+web_dir: web
+jobs_dir: data/jobs
+cors_origins:
+  - "http://127.0.0.1:8000"
+  - "http://localhost:8000"

@@ -1,6 +1,7 @@
 # Data (large / private)
 data/raw/
 data/processed/
+data/jobs/
 models/*.osim
 models/**/*.osim
 !models/.gitkeep
@@ -29,7 +30,3 @@ gittoken
 # Legacy / non-pipeline
 *.odt
 *.ods
-
-# Web job uploads
-inbox/**
-!inbox/.gitkeep
