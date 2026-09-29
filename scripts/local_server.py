@@ -1,4 +1,4 @@
-"""Local HTTP server: serve web UI + run Workstream A on upload."""
+"""Local HTTP server: serve web UI + process an uploaded subject folder."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from flask import Flask, jsonify, request, send_file, send_from_directory
 from flask_cors import CORS
 
 from gait.config import load_yaml
-from gait.run_job import run_job
+from gait.run_subject_dir import run_subject_dir
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -45,23 +45,46 @@ def _routes(app: Flask, web: Path, jobs: Path) -> None:
 
 
 def _handle_process(req, jobs: Path):
-    upload = req.files.get("source")
-    if upload is None or not upload.filename:
-        return jsonify({"error": "missing source file"}), 400
+    uploads = req.files.getlist("files")
+    if not uploads:
+        return jsonify({"error": "missing folder upload (files)"}), 400
     if "config_yaml" not in req.form:
         return jsonify({"error": "missing config_yaml"}), 400
     job_dir = jobs / f"job-{int(time.time() * 1000)}"
-    job_dir.mkdir(parents=True, exist_ok=True)
-    src = job_dir / Path(upload.filename).name
-    upload.save(src)
+    src = job_dir / "input"
+    src.mkdir(parents=True, exist_ok=True)
+    try:
+        _save_folder_upload(uploads, src)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
     cfg_path = job_dir / "trial.yaml"
     cfg_path.write_text(req.form["config_yaml"], encoding="utf-8")
     out = job_dir / "out"
     try:
-        run_job(str(cfg_path), str(src), str(out))
+        run_subject_dir(str(cfg_path), str(src), str(out))
     except Exception as exc:
         return jsonify({"error": str(exc)}), 400
     return send_file(_zip_dir(out), as_attachment=True, download_name="gait-outputs.zip")
+
+
+def _save_folder_upload(uploads, dest: Path) -> None:
+    saved = 0
+    for upload in uploads:
+        if not upload.filename:
+            continue
+        rel = Path(upload.filename)
+        # Browser sends "FolderName/file.c3d" — strip the top folder name.
+        parts = rel.parts
+        if len(parts) > 1:
+            rel = Path(*parts[1:])
+        target = (dest / rel).resolve()
+        if not str(target).startswith(str(dest.resolve())):
+            raise ValueError(f"invalid upload path: {upload.filename}")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        upload.save(target)
+        saved += 1
+    if saved == 0:
+        raise ValueError("folder upload contained no files")
 
 
 def _zip_dir(out: Path) -> io.BytesIO:

@@ -10,46 +10,45 @@ async function loadTrialTemplate() {
   return res.text();
 }
 
-function adapterType(fileName) {
-  const ext = fileName.split(".").pop().toLowerCase();
-  if (ext === "c3d") return "c3d";
-  return "csv";
-}
-
-function buildYaml(template, form, fileName) {
+function buildYaml(template, form) {
   const height = Number(form.height_m.value);
   return template
-    .replaceAll("__ADAPTER_TYPE__", adapterType(fileName))
     .replaceAll("__SUBJECT_ID__", form.subject_id.value.trim())
     .replaceAll("__MASS_KG__", String(Number(form.mass_kg.value)))
-    .replaceAll("__HEIGHT_M__", Number.isFinite(height) ? String(height) : "null")
-    .replaceAll("__TRIAL_ID__", form.trial_id.value.trim() || "walk01");
+    .replaceAll("__HEIGHT_M__", Number.isFinite(height) ? String(height) : "null");
 }
 
-function wireDrop() {
-  const zone = $("drop-zone");
-  const input = $("source-file");
+function wireFolder() {
+  const input = $("folder-input");
   const label = $("drop-label");
-  zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("drag"); });
-  zone.addEventListener("dragleave", () => zone.classList.remove("drag"));
-  zone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    zone.classList.remove("drag");
-    if (e.dataTransfer.files[0]) {
-      input.files = e.dataTransfer.files;
-      label.textContent = e.dataTransfer.files[0].name;
+  input.addEventListener("change", () => {
+    const files = [...input.files];
+    if (!files.length) {
+      label.textContent = "Choose patient folder";
+      return;
+    }
+    const top = files[0].webkitRelativePath.split("/")[0] || "folder";
+    const c3ds = files.filter((f) => f.name.toLowerCase().endsWith(".c3d"));
+    label.textContent = `${top} (${files.length} files, ${c3ds.length} C3D)`;
+    if (!$("subject_id").dataset.touched) {
+      $("subject_id").value = top;
     }
   });
-  input.addEventListener("change", () => {
-    if (input.files[0]) label.textContent = input.files[0].name;
+  $("subject_id").addEventListener("input", () => {
+    $("subject_id").dataset.touched = "1";
   });
 }
 
-async function runLocal(appCfg, file, form) {
-  $("status").textContent = "Running local pipeline…";
+async function runLocal(appCfg, form) {
+  const files = [...$("folder-input").files];
+  if (!files.length) throw new Error("Choose a patient folder first.");
+  $("status").textContent = `Uploading ${files.length} files and running pipeline…`;
   const body = new FormData();
-  body.append("source", file, file.name);
-  body.append("config_yaml", buildYaml(appCfg.trialTemplate, form, file.name));
+  body.append("config_yaml", buildYaml(appCfg.trialTemplate, form));
+  for (const file of files) {
+    const rel = file.webkitRelativePath || file.name;
+    body.append("files", file, rel);
+  }
   const res = await fetch(`${appCfg.api_base}/api/process`, { method: "POST", body });
   if (!res.ok) {
     const text = await res.text();
@@ -69,16 +68,11 @@ async function runLocal(appCfg, file, form) {
 
 async function onSubmit(e, appCfg) {
   e.preventDefault();
-  const file = $("source-file").files[0];
-  if (!file) {
-    $("status").textContent = "Choose a source file first.";
-    return;
-  }
   const btn = $("run-btn");
   btn.disabled = true;
   $("download").hidden = true;
   try {
-    await runLocal(appCfg, file, e.target);
+    await runLocal(appCfg, e.target);
   } catch (err) {
     $("status").textContent = String(err.message || err);
   } finally {
@@ -88,7 +82,7 @@ async function onSubmit(e, appCfg) {
 
 async function boot() {
   try {
-    wireDrop();
+    wireFolder();
     const appCfg = await loadAppConfig();
     appCfg.trialTemplate = await loadTrialTemplate();
     const health = await fetch(`${appCfg.api_base}/api/health`);
@@ -99,7 +93,7 @@ async function boot() {
   } catch (err) {
     $("status").textContent =
       `Start the local server first: PYTHONPATH=src python scripts/local_server.py (${err.message || err})`;
-    wireDrop();
+    wireFolder();
   }
 }
 

@@ -43,11 +43,16 @@ class C3dAdapter:
         return times, markers, rate
 
     def _forces(self, raw, config: dict, axes):
-        plates_cfg = config.get("force_plates") or []
-        analog = raw["data"]["analogs"]  # (1, n_channels, T)
         rate = float(raw["parameters"]["ANALOG"]["RATE"]["value"][0])
-        plates = [self._one_plate(analog, p, axes) for p in plates_cfg]
-        return plates, rate
+        plates_cfg = config.get("force_plates") or []
+        if plates_cfg:
+            analog = raw["data"]["analogs"]
+            plates = [self._one_plate(analog, p, axes) for p in plates_cfg]
+            return plates, rate
+        plates = self._forces_from_platforms(raw, config, axes)
+        if plates:
+            return plates, rate
+        return self._forces_from_fp_group(raw, config, axes), rate
 
     def _one_plate(self, analog, plate_cfg: dict, axes) -> ForcePlateSeries:
         ch = plate_cfg["channels"]
@@ -61,3 +66,79 @@ class C3dAdapter:
             moment=moment,
             applied_to_body=plate_cfg["applied_to_body"],
         )
+
+    def _forces_from_platforms(self, raw, config: dict, axes) -> list:
+        platforms = raw["data"].get("platform") or []
+        bodies = config.get("force_platform_bodies") or []
+        plates = []
+        for i, plat in enumerate(platforms):
+            if "force" not in plat or "center_of_pressure" not in plat:
+                continue
+            body = _plate_body(bodies, i)
+            force = apply_rotation(np.asarray(plat["force"], dtype=float).T, axes)
+            cop = apply_rotation(
+                np.asarray(plat["center_of_pressure"], dtype=float).T, axes
+            )
+            moment = (
+                apply_rotation(np.asarray(plat["moment"], dtype=float).T, axes)
+                if "moment" in plat
+                else np.zeros_like(force)
+            )
+            plates.append(
+                ForcePlateSeries(
+                    name=f"FP{i + 1}",
+                    force=force,
+                    cop=cop,
+                    moment=moment,
+                    applied_to_body=body,
+                )
+            )
+        return plates
+
+    def _forces_from_fp_group(self, raw, config: dict, axes) -> list:
+        fp = raw["parameters"].get("FORCE_PLATFORM")
+        if fp is None or int(fp["USED"]["value"][0]) < 1:
+            return []
+        n = int(fp["USED"]["value"][0])
+        channel = np.asarray(fp["CHANNEL"]["value"], dtype=int)
+        corners = np.asarray(fp["CORNERS"]["value"], dtype=float)
+        analog = raw["data"]["analogs"][0]
+        units = [str(u).lower() for u in raw["parameters"]["ANALOG"]["UNITS"]["value"]]
+        bodies = config.get("force_platform_bodies") or []
+        threshold = float(config.get("force_threshold_n", 20.0))
+        plates = []
+        for i in range(n):
+            idxs = channel[:, i] - 1
+            force = analog[idxs[0:3], :].T.astype(float)
+            moment = analog[idxs[3:6], :].T.astype(float)
+            for j, idx in enumerate(idxs[3:6]):
+                if idx < len(units) and units[idx] == "nmm":
+                    moment[:, j] /= 1000.0
+            center = corners[:, :, i].mean(axis=1) * length_scale("mm")
+            cop = _cop_from_fm(force, moment, center, threshold)
+            plates.append(
+                ForcePlateSeries(
+                    name=f"FP{i + 1}",
+                    force=apply_rotation(force, axes),
+                    cop=apply_rotation(cop, axes),
+                    moment=apply_rotation(moment, axes),
+                    applied_to_body=_plate_body(bodies, i),
+                )
+            )
+        return plates
+
+
+def _plate_body(bodies: list, i: int) -> str:
+    if i < len(bodies):
+        return bodies[i]
+    return "calcn_r" if i % 2 == 0 else "calcn_l"
+
+
+def _cop_from_fm(force, moment, center_m: np.ndarray, threshold: float) -> np.ndarray:
+    cop = np.tile(center_m, (force.shape[0], 1))
+    fz = force[:, 2]
+    active = np.abs(fz) > threshold
+    cop[active, 0] = center_m[0] + (-moment[active, 1] / fz[active])
+    cop[active, 1] = center_m[1] + (moment[active, 0] / fz[active])
+    cop[active, 2] = center_m[2]
+    return cop

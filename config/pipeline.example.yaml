@@ -1,53 +1,50 @@
-# Example trial config — copy and edit per subject/trial.
-# No secrets. Paths are relative to the gait repo root unless absolute.
+# Example subject-folder config — edit subject mass/height/id; point at patient dir via CLI.
 
 adapter:
   type: c3d
 
-# For CSV sources, set adapter.type: csv and fill:
-# csv:
-#   delimiter: ","
-#   time_column: time          # or omit and set sample_rate_hz
-#   sample_rate_hz: 100
-#   axis_suffixes: ["_X", "_Y", "_Z"]
+# Globs relative to the patient folder (--input-dir).
+subject_dir:
+  static_glob: "*Cal*.c3d"
+  dynamic_glob: "BWA_*.c3d"
 
 paths:
   processed_dir: data/processed
   marker_map: config/marker_maps/example.yaml
 
 subject:
-  subject_id: SUBJECT01
+  subject_id: TVC-4
   mass_kg: 70.0
   height_m: 1.70
   hemiplegic_side: null
-  trial_id: walk01
+  trial_id: batch
 
 units:
   marker_input: mm
   trc_output: m
 
 lab_axes:
-  # Row-major 3x3: lab coordinates → OpenSim (Y-up) coordinates
   from_lab_to_opensim:
     - [1.0, 0.0, 0.0]
     - [0.0, 1.0, 0.0]
     - [0.0, 0.0, 1.0]
 
-# Analog channel indices into the C3D ANALOG matrix (0-based).
-# Run tests/test_inspect_c3d.py first, then fill indices. Use [] to skip GRF.
+# Empty = read FORCE_PLATFORM + Force.Fx1… channels from the C3D.
 force_plates: []
-# Example once you know indices:
-# force_plates:
-#   - name: FP1
-#     applied_to_body: calcn_r
-#     channels:
-#       force: [0, 1, 2]
-#       cop: [3, 4, 5]
-#       moment: [6, 7, 8]
+force_threshold_n: 20
+
+# Body attached to each C3D force platform index (0, 1, ...).
+force_platform_bodies:
+  - calcn_r
+  - calcn_l
+  - calcn_r
+  - calcn_l
 
 opensim:
+  enabled: true
   ground_body: ground
   generic_model: models/Rajagopal2016.osim
+  marker_set: config/opensim/markerset_walk_preScale.xml
   scale_setup: config/opensim/scale_setup.xml
   ik_setup: config/opensim/ik_setup.xml
   id_setup: config/opensim/id_setup.xml

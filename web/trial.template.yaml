@@ -1,5 +1,8 @@
 adapter:
-  type: __ADAPTER_TYPE__
+  type: c3d
+subject_dir:
+  static_glob: "*Cal*.c3d"
+  dynamic_glob: "BWA_*.c3d"
 paths:
   processed_dir: data/processed
   marker_map: config/marker_maps/example.yaml
@@ -8,7 +11,7 @@ subject:
   mass_kg: __MASS_KG__
   height_m: __HEIGHT_M__
   hemiplegic_side: null
-  trial_id: __TRIAL_ID__
+  trial_id: batch
 units:
   marker_input: mm
   trc_output: m
@@ -18,23 +21,17 @@ lab_axes:
     - [0.0, 1.0, 0.0]
     - [0.0, 0.0, 1.0]
 force_plates: []
-csv:
-  delimiter: ","
-  time_column: time
-  sample_rate_hz: 100
-  axis_suffixes: ["_X", "_Y", "_Z"]
-  # Optional GRF columns in the CSV (needed for grf.mot, external_loads.xml, id.sto):
-  # force_plates:
-  #   - name: FP1
-  #     applied_to_body: calcn_r
-  #     force_columns: [Fx, Fy, Fz]
-  #     cop_columns: [COPx, COPy, COPz]
-  #     moment_columns: [Mx, My, Mz]
-  force_plates: []
+force_threshold_n: 20
+force_platform_bodies:
+  - calcn_r
+  - calcn_l
+  - calcn_r
+  - calcn_l
 opensim:
   enabled: true
   ground_body: ground
   generic_model: models/Rajagopal2016.osim
+  marker_set: config/opensim/markerset_walk_preScale.xml
   scale_setup: config/opensim/scale_setup.xml
   ik_setup: config/opensim/ik_setup.xml
   id_setup: config/opensim/id_setup.xml

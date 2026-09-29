@@ -12,7 +12,14 @@ def main() -> None:
     cfg, _source = parse_config_source("Test Scale")
     osim = cfg["opensim"]
     scaled = out_dir(cfg) / osim["outputs"]["scaled_model"]
-    run_scale(osim["generic_model"], osim["scale_setup"], str(scaled))
+    run_scale(
+        osim["generic_model"],
+        osim["scale_setup"],
+        str(scaled),
+        str(out_dir(cfg) / osim["outputs"]["trc"]),
+        float(cfg["subject"]["mass_kg"]),
+        osim.get("marker_set"),
+    )
     print("wrote", scaled, "exists=", Path(scaled).exists())
     print("OK")
 

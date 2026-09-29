@@ -16,7 +16,12 @@ def main() -> None:
     ik_mot = out / osim["outputs"]["ik_mot"]
     if not scaled.exists():
         raise SystemExit(f"Missing {scaled}; run test_scale.py first")
-    run_ik(str(scaled), osim["ik_setup"], str(ik_mot))
+    run_ik(
+        str(scaled),
+        osim["ik_setup"],
+        str(ik_mot),
+        str(out / osim["outputs"]["trc"]),
+    )
     print("wrote", ik_mot, "exists=", Path(ik_mot).exists())
     print("OK")
 
