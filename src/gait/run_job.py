@@ -6,6 +6,7 @@ from pathlib import Path
 
 from gait.adapters.factory import get_adapter
 from gait.config import load_yaml
+from gait.heading import normalize_walking_heading
 from gait.mapping import apply_marker_map_file
 from gait.opensim_scale_ik_id import run_id, run_ik, run_scale
 from gait.scale_measurements import measurements_from_trc
@@ -20,6 +21,7 @@ def run_job(config_path: str, source_path: str, out_dir: str) -> Path:
     names = cfg["opensim"]["outputs"]
     trial = get_adapter(cfg["adapter"]["type"]).load(source_path, cfg)
     trial = apply_marker_map_file(trial, load_yaml(cfg["paths"]["marker_map"]))
+    normalize_walking_heading(trial)
     trc = out / names["trc"]
     write_trc(trial, trc, cfg["units"]["trc_output"])
     if trial.forces:

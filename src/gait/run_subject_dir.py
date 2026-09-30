@@ -8,6 +8,7 @@ from gait.adapters.factory import get_adapter
 from gait.anthro import anthro_from_subject_dir
 from gait.config import load_yaml
 from gait.discover import discover_c3ds
+from gait.heading import normalize_walking_heading, walk_progress_x
 from gait.mapping import apply_marker_map_file
 from gait.opensim_scale_ik_id import run_id, run_ik, run_scale
 from gait.scale_measurements import measurements_from_trc
@@ -94,6 +95,14 @@ def _process_dynamic(cfg, c3d_path: Path, marker_cfg, scaled: Path, trial_out: P
     trial_out.mkdir(parents=True, exist_ok=True)
     status = {k: "pending" for k in names.values()}
     trial = _load_trial(cfg, c3d_path, marker_cfg, c3d_path.stem)
+    dx_before = walk_progress_x(trial)
+    rotated = normalize_walking_heading(trial)
+    dx_after = walk_progress_x(trial)
+    status["heading"] = (
+        f"yaw180 (dx {dx_before:+.2f}->{dx_after:+.2f} m)"
+        if rotated
+        else f"ok (dx {dx_after:+.2f} m)" if dx_after is not None else "ok"
+    )
     trc = trial_out / names["trc"]
     write_trc(trial, trc, cfg["units"]["trc_output"])
     status[names["trc"]] = "ok"
