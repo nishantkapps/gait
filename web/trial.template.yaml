@@ -37,27 +37,7 @@ opensim:
   scale_setup: config/opensim/scale_setup.xml
   ik_setup: config/opensim/ik_setup.xml
   id_setup: config/opensim/id_setup.xml
-  # Whole-leg ASIS→Heel so feet stay on the floor (separate thigh/shank left legs long).
-  scale_measurements:
-    - name: pelvis
-      markers: [L.ASIS, R.ASIS]
-      bodies: [pelvis]
-      axes: [X, Z]
-    - name: leg_r
-      markers: [R.ASIS, R.Heel]
-      bodies: [femur_r, patella_r, tibia_r, talus_r]
-    - name: leg_l
-      markers: [L.ASIS, L.Heel]
-      bodies: [femur_l, patella_l, tibia_l, talus_l]
-    - name: foot_r
-      markers: [R.Heel, R.Toe]
-      bodies: [calcn_r, toes_r]
-    - name: foot_l
-      markers: [L.Heel, L.Toe]
-      bodies: [calcn_l, toes_l]
-    - name: torso
-      markers: [MidClavicle, Head]
-      bodies: [torso]
+  # Scale MeasurementSet is built in code from the static TRC markers.
   outputs:
     trc: markers.trc
     grf_mot: grf.mot

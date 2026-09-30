@@ -10,6 +10,7 @@ from gait.config import load_yaml
 from gait.discover import discover_c3ds
 from gait.mapping import apply_marker_map_file
 from gait.opensim_scale_ik_id import run_id, run_ik, run_scale
+from gait.scale_measurements import measurements_from_trc
 from gait.writers.grf import write_external_loads_xml, write_grf_mot
 from gait.writers.trc import write_trc
 
@@ -59,6 +60,22 @@ def _scale_static(cfg, static_c3d: Path, marker_cfg, out: Path, names: dict) -> 
     trc = scale_dir / "static.trc"
     write_trc(trial, trc, cfg["units"]["trc_output"])
     o = cfg["opensim"]
+    # Prefer code-derived measurements from markers present in the static TRC.
+    # YAML opensim.scale_measurements remains an explicit override when provided.
+    yaml_meas = o.get("scale_measurements")
+    if yaml_meas:
+        measurements = list(yaml_meas)
+    else:
+        measurements = measurements_from_trc(trc)
+    (scale_dir / "scale_measurements_used.txt").write_text(
+        "\n".join(
+            f"{m['name']}: {m['markers'][0]}-{m['markers'][1]} -> {','.join(m['bodies'])}"
+            + (f" axes={m['axes']}" if m.get("axes") else "")
+            for m in measurements
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     scaled = scale_dir / names["scaled_model"]
     run_scale(
         o["generic_model"],
@@ -67,7 +84,7 @@ def _scale_static(cfg, static_c3d: Path, marker_cfg, out: Path, names: dict) -> 
         str(trc),
         float(cfg["subject"]["mass_kg"]),
         o.get("marker_set"),
-        o.get("scale_measurements"),
+        measurements,
         cfg["subject"].get("height_m"),
     )
     return scaled

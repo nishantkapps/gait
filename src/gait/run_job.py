@@ -8,6 +8,7 @@ from gait.adapters.factory import get_adapter
 from gait.config import load_yaml
 from gait.mapping import apply_marker_map_file
 from gait.opensim_scale_ik_id import run_id, run_ik, run_scale
+from gait.scale_measurements import measurements_from_trc
 from gait.writers.grf import write_external_loads_xml, write_grf_mot
 from gait.writers.trc import write_trc
 
@@ -38,6 +39,7 @@ def _opensim(cfg: dict, out: Path, names: dict, trc: Path) -> None:
         if not Path(o[key]).exists():
             raise FileNotFoundError(f"OpenSim asset missing: {o[key]}")
     scaled = out / names["scaled_model"]
+    measurements = o.get("scale_measurements") or measurements_from_trc(trc)
     run_scale(
         o["generic_model"],
         o["scale_setup"],
@@ -45,7 +47,7 @@ def _opensim(cfg: dict, out: Path, names: dict, trc: Path) -> None:
         str(trc),
         float(cfg["subject"]["mass_kg"]),
         o.get("marker_set"),
-        o.get("scale_measurements"),
+        measurements,
         cfg["subject"].get("height_m"),
     )
     ik = out / names["ik_mot"]
