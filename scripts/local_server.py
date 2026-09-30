@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import re
 import traceback
 import zipfile
 from pathlib import Path
@@ -11,11 +12,18 @@ from flask import Flask, jsonify, request, send_file, send_from_directory
 from flask_cors import CORS
 
 from gait.config import load_yaml
+from gait.marker_map_ui import (
+    c3d_marker_labels,
+    default_marker_map,
+    opensim_marker_names,
+)
 from gait.run_layout import allocate_run
 from gait.run_log import capture_run_log
 from gait.run_subject_dir import run_subject_dir
 
 ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_MARKER_MAP = ROOT / "config" / "marker_maps" / "pig_rajagopal.yaml"
+DEFAULT_MARKERSET = ROOT / "config" / "opensim" / "markerset_walk_preScale.xml"
 
 
 def create_app(cfg: dict) -> Flask:
@@ -43,6 +51,38 @@ def _routes(app: Flask, web: Path, outputs_root: Path, logs_root: Path) -> None:
     def health():
         return jsonify({"ok": True})
 
+    @app.get("/api/marker_setup")
+    def marker_setup():
+        try:
+            mm = default_marker_map(DEFAULT_MARKER_MAP)
+            return jsonify(
+                {
+                    "opensim_markers": opensim_marker_names(DEFAULT_MARKERSET),
+                    "default_markers": dict(mm.get("markers") or {}),
+                    "default_average_markers": dict(mm.get("average_markers") or {}),
+                    "map_path": str(DEFAULT_MARKER_MAP.relative_to(ROOT)),
+                }
+            )
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 400
+
+    @app.post("/api/inspect_markers")
+    def inspect_markers():
+        upload = request.files.get("file")
+        if not upload or not upload.filename:
+            return jsonify({"error": "missing C3D file"}), 400
+        tmp = logs_root / "_inspect"
+        tmp.mkdir(parents=True, exist_ok=True)
+        path = tmp / Path(upload.filename).name
+        upload.save(path)
+        try:
+            labels = c3d_marker_labels(path)
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 400
+        finally:
+            path.unlink(missing_ok=True)
+        return jsonify({"source_markers": labels, "file": Path(upload.filename).name})
+
     @app.post("/api/process")
     def process():
         return _handle_process(request, outputs_root, logs_root)
@@ -63,7 +103,20 @@ def _handle_process(req, outputs_root: Path, logs_root: Path):
     except ValueError as exc:
         return jsonify({"error": str(exc), "run": run_n}), 400
     cfg_path = out_dir / "trial.yaml"
-    cfg_path.write_text(req.form["config_yaml"], encoding="utf-8")
+    cfg_text = req.form["config_yaml"]
+    if req.form.get("marker_map_yaml"):
+        mm_path = out_dir / "marker_map.yaml"
+        mm_path.write_text(req.form["marker_map_yaml"], encoding="utf-8")
+        # Point this run at the UI-edited map (keep rest of template intact).
+        if re.search(r"(?m)^(\s*marker_map:\s*).*$", cfg_text):
+            cfg_text = re.sub(
+                r"(?m)^(\s*marker_map:\s*).*$",
+                rf"\1{mm_path.as_posix()}",
+                cfg_text,
+            )
+        else:
+            cfg_text += f"\npaths:\n  marker_map: {mm_path.as_posix()}\n"
+    cfg_path.write_text(cfg_text, encoding="utf-8")
     results = out_dir / "results"
     try:
         with capture_run_log(log_path):

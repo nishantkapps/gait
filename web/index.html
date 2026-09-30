@@ -18,8 +18,8 @@
   <main class="stage">
     <h1 class="headline">Upload a patient folder into OpenSim outputs</h1>
     <p class="lede">
-      Choose the subject directory (Cal static + BWA walk C3Ds). The local server
-      scales once, then runs IK/ID for every walk trial and returns a zip.
+      Choose the subject directory (Cal static + BWA walk C3Ds), map source
+      marker columns to Rajagopal2016 names, then run Scale / IK / ID.
     </p>
 
     <form id="job-form" class="panel">
@@ -35,10 +35,39 @@
         <label>Mass (kg) — optional; overridden from C3D PROCESSING if present
           <input name="mass_kg" id="mass_kg" type="number" step="0.1" value="70" />
         </label>
-        <label>Height (m) — optional; overridden from C3D PROCESSING if present
+        <label class="wide">Height (m) — optional; overridden from C3D PROCESSING if present
           <input name="height_m" id="height_m" type="number" step="0.01" value="1.70" />
         </label>
       </div>
+
+      <section class="map-block" aria-labelledby="map-heading">
+        <div class="map-head">
+          <h2 id="map-heading">Marker map</h2>
+          <button type="button" id="load-markers-btn" class="ghost">Load columns from Cal C3D</button>
+        </div>
+        <p class="hint">
+          Source labels come from the C3D. Map each one to a Rajagopal walk
+          marker, or leave as <em>skip</em>. Defaults load from
+          <code>pig_rajagopal.yaml</code>.
+        </p>
+        <p id="map-status" class="status" role="status"></p>
+        <div class="map-table-wrap">
+          <table class="map-table" id="map-table">
+            <thead>
+              <tr>
+                <th>Source (file)</th>
+                <th>OpenSim (Rajagopal)</th>
+              </tr>
+            </thead>
+            <tbody id="map-body"></tbody>
+          </table>
+        </div>
+        <details class="averages">
+          <summary>Average markers (optional)</summary>
+          <p class="hint">Several source labels → one OpenSim marker (nanmean).</p>
+          <div id="avg-body" class="avg-grid"></div>
+        </details>
+      </section>
 
       <button type="submit" id="run-btn">Run pipeline</button>
       <p id="status" class="status" role="status"></p>

@@ -53,7 +53,7 @@ html, body {
 }
 
 .stage {
-  max-width: 42rem;
+  max-width: 52rem;
   padding: 1.25rem clamp(1.25rem, 4vw, 3rem) 4rem;
 }
 
@@ -173,6 +173,109 @@ button:disabled {
   cursor: wait;
 }
 
+button.ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 0.55rem 0.85rem;
+  font-weight: 500;
+}
+
+button.ghost:hover {
+  border-color: var(--glow);
+  filter: none;
+}
+
+.map-block {
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.map-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.map-head h2 {
+  margin: 0;
+  font-family: Fraunces, Georgia, serif;
+  font-weight: 500;
+  font-size: 1.25rem;
+}
+
+.map-table-wrap {
+  max-height: 22rem;
+  overflow: auto;
+  border: 1px solid var(--line);
+}
+
+.map-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.map-table th,
+.map-table td {
+  padding: 0.45rem 0.65rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.map-table th {
+  position: sticky;
+  top: 0;
+  background: #15201c;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.map-table .empty {
+  color: var(--muted);
+  padding: 1rem 0.65rem;
+}
+
+.map-table code.src {
+  color: var(--glow);
+  font-size: 0.85em;
+}
+
+.map-select,
+.avg-grid input,
+select {
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--line);
+  background: #101613;
+  color: var(--ink);
+  font: inherit;
+}
+
+.averages {
+  border-top: 1px solid var(--line);
+  padding-top: 0.65rem;
+}
+
+.averages summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.avg-grid {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .status, .download {
   margin: 0;
   min-height: 1.25rem;
@@ -190,5 +293,5 @@ button:disabled {
 }
 
 @media (max-width: 640px) {
-  .grid { grid-template-columns: 1fr; }
+  .grid, .avg-grid { grid-template-columns: 1fr; }
 }
