@@ -54,15 +54,6 @@ function isLikelySurface(name) {
   return true;
 }
 
-function opensimOptionsHtml(selected) {
-  const opts = [`<option value="${SKIP}">— skip —</option>`];
-  for (const name of setup.opensim_markers) {
-    const sel = name === selected ? " selected" : "";
-    opts.push(`<option value="${escapeAttr(name)}"${sel}>${escapeHtml(name)}</option>`);
-  }
-  return opts.join("");
-}
-
 function escapeHtml(s) {
   return String(s)
     .replaceAll("&", "&amp;")
@@ -74,32 +65,68 @@ function escapeAttr(s) {
   return escapeHtml(s).replaceAll('"', "&quot;");
 }
 
-function invertDefaultMap() {
+/** dest (OpenSim) → src from default YAML (1:1 markers only). */
+function defaultDestToSrc() {
   /** @type {Record<string, string>} */
-  const bySrc = { ...setup.default_markers };
-  return bySrc;
+  const out = {};
+  for (const [src, dest] of Object.entries(setup.default_markers || {})) {
+    if (!out[dest]) out[dest] = src;
+  }
+  return out;
+}
+
+function defaultSourceNames() {
+  const names = new Set(Object.keys(setup.default_markers || {}));
+  for (const spec of Object.values(setup.default_average_markers || {})) {
+    for (const s of spec.sources || []) names.add(s);
+  }
+  return [...names].sort();
+}
+
+function sourceChoices() {
+  if (sourceMarkers.length) return sourceMarkers;
+  return defaultSourceNames();
+}
+
+function sourceOptionsHtml(selected) {
+  const opts = [`<option value="${SKIP}">— skip —</option>`];
+  for (const name of sourceChoices()) {
+    const sel = name === selected ? " selected" : "";
+    opts.push(`<option value="${escapeAttr(name)}"${sel}>${escapeHtml(name)}</option>`);
+  }
+  // Keep a custom selected value visible even if not in the current list.
+  if (selected && !sourceChoices().includes(selected)) {
+    opts.push(
+      `<option value="${escapeAttr(selected)}" selected>${escapeHtml(selected)}</option>`
+    );
+  }
+  return opts.join("");
 }
 
 function renderMapTable() {
   const body = $("map-body");
+  const rows = setup.opensim_markers || [];
+  /** @type {Record<string, string>} */
+  const current = {};
+  for (const sel of document.querySelectorAll(".map-select")) {
+    const dest = sel.getAttribute("data-dest");
+    if (dest) current[dest] = sel.value;
+  }
   body.innerHTML = "";
-  const defaults = invertDefaultMap();
-  const rows = sourceMarkers.length
-    ? sourceMarkers
-    : Object.keys(defaults).sort();
   if (!rows.length) {
     body.innerHTML =
-      '<tr><td colspan="2" class="empty">Load a Cal C3D to list source columns.</td></tr>';
+      '<tr><td colspan="2" class="empty">OpenSim markerset not loaded.</td></tr>';
     return;
   }
-  for (const src of rows) {
+  const destToSrc = defaultDestToSrc();
+  for (const dest of rows) {
+    const selected = current[dest] ?? destToSrc[dest] ?? SKIP;
     const tr = document.createElement("tr");
-    const selected = defaults[src] || SKIP;
     tr.innerHTML = `
-      <td><code class="src">${escapeHtml(src)}</code></td>
+      <td><code class="src">${escapeHtml(dest)}</code></td>
       <td>
-        <select data-src="${escapeAttr(src)}" class="map-select">
-          ${opensimOptionsHtml(selected)}
+        <select data-dest="${escapeAttr(dest)}" class="map-select">
+          ${sourceOptionsHtml(selected)}
         </select>
       </td>`;
     body.appendChild(tr);
@@ -127,8 +154,8 @@ function collectMarkerMapYaml() {
   /** @type {Record<string, string>} */
   const markers = {};
   for (const sel of document.querySelectorAll(".map-select")) {
-    const src = sel.getAttribute("data-src");
-    const dest = sel.value;
+    const dest = sel.getAttribute("data-dest");
+    const src = sel.value;
     if (src && dest) markers[src] = dest;
   }
   /** @type {Record<string, {sources: string[]}>} */
@@ -202,10 +229,12 @@ async function loadMarkersFromFolder(apiBase) {
   }
   const data = await res.json();
   const all = data.source_markers || [];
-  sourceMarkers = all.filter(isLikelySurface);
+  sourceMarkers = all.filter(isLikelySurface).sort();
   renderMapTable();
+  const nOpen = (setup.opensim_markers || []).length;
   $("map-status").textContent =
-    `${sourceMarkers.length} surface labels from ${data.file}` +
+    `${nOpen} Rajagopal markers × ${sourceMarkers.length} source columns` +
+    ` from ${data.file}` +
     (all.length > sourceMarkers.length
       ? ` (${all.length - sourceMarkers.length} virtual/angle labels hidden).`
       : ".") +
@@ -263,6 +292,9 @@ async function boot() {
     setup = await loadMarkerSetup(appCfg.api_base);
     renderMapTable();
     renderAverages();
+    $("map-status").textContent =
+      `${(setup.opensim_markers || []).length} Rajagopal markers listed. ` +
+      `Load Cal C3D columns to fill the source dropdowns.`;
     $("load-markers-btn").addEventListener("click", async () => {
       try {
         await loadMarkersFromFolder(appCfg.api_base);
